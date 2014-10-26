@@ -81,7 +81,7 @@ add_filter( 'json_pre_dispatch', 'jp_rest_cache_get', 10, 2 );
 
 		$result =  tlc_transient( __FUNCTION__ . $key  )
 			->updates_with( 'jp_rest_cache_rebuild', array( $server  ) )
-			->expires_in( 600 )
+			->expires_in( $cache_time )
 			->get();
 
 		return $result;
