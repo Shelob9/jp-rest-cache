@@ -14,7 +14,7 @@ BTW By "do science" I mean do a set of repeatable tests with a one independent v
 ### Installation
 This is not a plugin. It's a composer library. Putting this in your plugin directory and then opening an issue when this doesn't show up in your plugin admin is a violation of intergalactic law.
 
-Add `"shelob9/jp-wp-rest-api-client": "dev-master"` to your site/plugin/theme's composer.json. 
+Add `"shelob9/jp-rest-cache": "dev-master"` to your site/plugin/theme's composer.json. 
 
 
 ### License
