@@ -1,0 +1,26 @@
+{
+    "name" : "shelob9/jp-rest-cache",
+    "description" : "Soft-expiring, server-side cache  for the WordPress REST API (WP REST).",
+    "keywords" : [ "wordpress", "cache", "api" ],
+    "license" : "GPL-2.0+",
+    "authors" : [
+        {
+            "name" : "Josh Pollock",
+            "homepage" : "http://JoshPress.net",
+            "role" : "Developer"
+        }
+    ],
+    "require" : {
+        "composer/installers" : "~1.0.0",
+        "php" : ">=5.3.0",
+        "markjaquith/wp-tlc-transients" : "dev-master"
+    },
+    "support": {
+        "issues": "https://github.com/Shelob9/jp-rest-cache/issues",
+        "source": "https://github.com/Shelob9/jp-rest-cache"
+    },
+    "autoload"   : {
+        "files"   : ["jp-rest-cache.php"]
+    }
+
+}

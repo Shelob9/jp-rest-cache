@@ -6,12 +6,15 @@
  */
 //make sure we have the TLC transients one way or another.
 if (  ! function_exists( 'tlc_transient' ) ) {
-	$vendor_dir = __DIR__ . '/tlc-transients.php';
+
+	$vendor_dir = __DIR__ . '/vendor/autoload.php';
 	if ( ! file_exists( $vendor_dir) ) {
 		return;
 	}
+
 	require_once( $vendor_dir );
 }
+
 /**
  * Default Cache Length
  *
@@ -26,10 +29,11 @@ add_filter( 'rest_pre_dispatch', 'jp_rest_cache_get', 10, 3 );
 	 * Run the API query or get from cache
 	 *
 	 * @uses 'rest_pre_dispatch' filter
+
 	 * @param null $result
 	 *
 	 * @param obj| WP_JSON_Server $server
-	 *
+	 * @param obj| WP_REST_Request $request
 	 * @since 0.1.0
 	 */
 	function jp_rest_cache_get( $result, $server, $request ) {
@@ -38,6 +42,7 @@ add_filter( 'rest_pre_dispatch', 'jp_rest_cache_get', 10, 3 );
 
 		}
 		
+
 		/**
 		 * Cache override.
 		 *
@@ -76,14 +81,18 @@ add_filter( 'rest_pre_dispatch', 'jp_rest_cache_get', 10, 3 );
 		 *
 		 * @return bool
 		 */
-		$cache_time = JP_REST_CACHE_DEFAULT_CACHE_TIME;
-		$result =  tlc_transient( $request_uri )
-			->updates_with( 'jp_rest_cache_rebuild', array( $server,$request ))
+
+		$cache_time = apply_filters( 'jp_rest_cache_skip_cache', JP_REST_CACHE_DEFAULT_CACHE_TIME, $endpoint, $method );
+
+		$result =  tlc_transient( __FUNCTION__ . $key  )
+			->updates_with( 'jp_rest_cache_rebuild', array( $server, $request  ) )
 			->expires_in( $cache_time )
 			->get();
+
 		return $result;
 	}
 endif;
+
 if ( ! function_exists( 'jp_rest_cache_rebuild' ) ) :
 	/**
 	 * Rebuild the cache if needed.
@@ -91,22 +100,17 @@ if ( ! function_exists( 'jp_rest_cache_rebuild' ) ) :
 	 * @since 0.1.0
 	 *
 	 * @param obj|WP_JSON_Server $server
+	 * @param obj| WP_REST_Request $request
 	 *
 	 * @return mixed
 	 */
-	function jp_rest_cache_rebuild( $server, $request) {
+
+	function jp_rest_cache_rebuild( $server, $request ) {
+
 		$request->set_param('refresh-cache', true);
 		return $server->dispatch($request);
+
 	}
 endif;
 
-add_filter( 'jp_rest_cache_skip_cache', 'bk_check_cache', 10, 2 );
 
-function bk_check_cache($endpoint, $method){
-	if(! $method == 'GET'){
-		return true;
-	}
-
-	else return false;
-
-}
