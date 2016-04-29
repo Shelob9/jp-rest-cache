@@ -84,7 +84,7 @@ add_filter( 'rest_pre_dispatch', 'jp_rest_cache_get', 10, 3 );
 
 		$cache_time = apply_filters( 'jp_rest_cache_skip_cache', JP_REST_CACHE_DEFAULT_CACHE_TIME, $endpoint, $method );
 
-		$result =  tlc_transient( __FUNCTION__ . $key  )
+		$result =  tlc_transient( __FUNCTION__ . $request_uri  )
 			->updates_with( 'jp_rest_cache_rebuild', array( $server, $request  ) )
 			->expires_in( $cache_time )
 			->get();
