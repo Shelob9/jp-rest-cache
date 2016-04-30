@@ -6,6 +6,7 @@
  */
 //make sure we have the TLC transients one way or another.
 if (  ! function_exists( 'tlc_transient' ) ) {
+
 	$vendor_dir = __DIR__ . '/vendor/autoload.php';
 	if ( ! file_exists( $vendor_dir) ) {
 		return;
@@ -20,30 +21,27 @@ if (  ! function_exists( 'tlc_transient' ) ) {
  * @since 0.1.0
  */
 if ( ! defined( 'JP_REST_CACHE_DEFAULT_CACHE_TIME' ) ) {
-	define( 'JP_REST_CACHE_DEFAULT_CACHE_TIME', 532 );
+	define( 'JP_REST_CACHE_DEFAULT_CACHE_TIME', 360 );
 }
-
 if ( ! function_exists( 'jp_rest_cache_get' ) ) :
-add_filter( 'json_pre_dispatch', 'jp_rest_cache_get', 10, 2 );
+add_filter( 'rest_pre_dispatch', 'jp_rest_cache_get', 10, 3 );
 	/**
 	 * Run the API query or get from cache
 	 *
-	 * @uses 'json_pre_dispatch' filter
+	 * @uses 'rest_pre_dispatch' filter
+
 	 * @param null $result
 	 *
 	 * @param obj| WP_JSON_Server $server
-	 *
+	 * @param obj| WP_REST_Request $request
 	 * @since 0.1.0
 	 */
-	function jp_rest_cache_get( $result, $server ) {
+	function jp_rest_cache_get( $result, $server, $request ) {
 		if ( ! function_exists( 'jp_rest_cache_rebuild') ) {
-
 			return $result;
 
 		}
-
-		$endpoint = $server->path;
-		$method = $server->method;
+		
 
 		/**
 		 * Cache override.
@@ -56,15 +54,21 @@ add_filter( 'json_pre_dispatch', 'jp_rest_cache_get', 10, 2 );
 		 *
 		 * @return bool
 		 */
-		$skip_cache = apply_filters( 'jp_rest_cache_skip_cache', false, $endpoint, $method );
 
-		if ( $skip_cache )  {
+		$endpoint = $request->get_route();
+		$method = $request->get_method();
+		$request_uri = $_SERVER[ 'REQUEST_URI' ];
 
+
+		$skip_cache = apply_filters( 'jp_rest_cache_skip_cache', false, $endpoint, $method);
+			if ( $skip_cache )  {
+				return $result;
+			}
+
+		if($request->get_param('refresh-cache') === true){
 			return $result;
 		}
 
-		$request_uri = $_SERVER[ 'REQUEST_URI' ];
-		$key = md5( $request_uri );
 
 		/**
 		 * Set cache time
@@ -77,10 +81,11 @@ add_filter( 'json_pre_dispatch', 'jp_rest_cache_get', 10, 2 );
 		 *
 		 * @return bool
 		 */
+
 		$cache_time = apply_filters( 'jp_rest_cache_skip_cache', JP_REST_CACHE_DEFAULT_CACHE_TIME, $endpoint, $method );
 
-		$result =  tlc_transient( __FUNCTION__ . $key  )
-			->updates_with( 'jp_rest_cache_rebuild', array( $server  ) )
+		$result =  tlc_transient( __FUNCTION__ . $request_uri  )
+			->updates_with( 'jp_rest_cache_rebuild', array( $server, $request  ) )
 			->expires_in( $cache_time )
 			->get();
 
@@ -95,12 +100,15 @@ if ( ! function_exists( 'jp_rest_cache_rebuild' ) ) :
 	 * @since 0.1.0
 	 *
 	 * @param obj|WP_JSON_Server $server
+	 * @param obj| WP_REST_Request $request
 	 *
 	 * @return mixed
 	 */
-	function jp_rest_cache_rebuild( $server ) {
 
-		return $server->dispatch();
+	function jp_rest_cache_rebuild( $server, $request ) {
+
+		$request->set_param('refresh-cache', true);
+		return $server->dispatch($request);
 
 	}
 endif;
